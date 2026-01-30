@@ -3,6 +3,8 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 
+import { STELLAR_CONFIG } from '@mega-header-qyou/stellar';
+
 const app = express();
 const PORT = process.env.API_PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/mega-header-qyou';
@@ -17,7 +19,7 @@ app.get('/health', (req, res) => {
 const connectDB = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log(`✅ MongoDB Connected to: ${mongoose.connection.name}`);
+    console.log(`✅ MongoDB Connected`);
   } catch (err) {
     console.error('❌ MongoDB Connection Error:', err);
     process.exit(1);
@@ -27,4 +29,7 @@ const connectDB = async () => {
 app.listen(PORT, async () => {
   await connectDB();
   console.log(`🚀 API running on http://localhost:${PORT}`);
+
+  // LOG THE STELLAR CONFIG TO PROVE IT WORKS
+  console.log(`🌌 Stellar Mode: ${STELLAR_CONFIG.network}`);
 });
