@@ -1,18 +1,24 @@
 import { TransactionHelper } from './transactions';
 import { WalletManager } from './wallet';
+import { Keypair } from '@stellar/stellar-sdk';
 
 async function runPaymentTest() {
-  console.log('--- Starting Payment Transaction Test ---');
+  console.log('--- 💸 Starting Payment Transaction Test ---');
 
-  console.log('\nCreating SENDER...');
+  console.log('\n1. Creating SENDER...');
   const sender = WalletManager.createRandom();
-  await WalletManager.fundAccount(sender.publicKey);
+  const funded = await WalletManager.fundAccount(sender.publicKey);
 
-  console.log('\nCreating RECEIVER...');
+  if (!funded) {
+    console.error('❌ Failed to fund sender. Aborting.');
+    return;
+  }
+
+  console.log('\n2. Creating RECEIVER...');
   const receiver = WalletManager.createRandom();
   console.log(`   Receiver Public Key: ${receiver.publicKey}`);
 
-  console.log('\nBuilding Payment Transaction (50 XLM)...');
+  console.log('\n3. Building Payment Transaction (50 XLM)...');
   const amount = '50';
   const memo = 'mega-header-mega-header-qyou Reward';
 
@@ -24,7 +30,8 @@ async function runPaymentTest() {
       memo,
     );
 
-    transaction.sign(sender.pair);
+    const senderKeypair = Keypair.fromSecret(sender.secret);
+    transaction.sign(senderKeypair);
 
     await TransactionHelper.submitTx(transaction);
     console.log(
