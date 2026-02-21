@@ -3,6 +3,15 @@
     "compilerOptions": {
         "module": "CommonJS",
         "moduleResolution": "Node",
+        "baseUrl": ".",
+        "paths": {
+            "@mega-header-qyou/stellar": [
+                "../../stellar/client/src/index.ts"
+            ],
+            "@mega-header-qyou/stellar/*": [
+                "../../stellar/client/src/*"
+            ]
+        },
         "outDir": "dist",
         "rootDir": "."
     },
