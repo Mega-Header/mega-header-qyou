@@ -4,6 +4,10 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 
 import { STELLAR_CONFIG } from '@mega-header-qyou/stellar';
+import { AuthError } from './errors/AppError';
+import { logger } from './logger';
+import { errorHandler } from './middleware/errorHandler';
+import { notFoundHandler } from './middleware/notFound';
 
 const app = express();
 const PORT = process.env.API_PORT || 4000;
@@ -16,20 +20,37 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'mega-header-mega-header-qyou API', timestamp: new Date() });
 });
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect(MONGO_URI);
-    console.log(`✅ MongoDB Connected`);
-  } catch (err) {
-    console.error('❌ MongoDB Connection Error:', err);
-    process.exit(1);
+app.get('/protected-example', (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return next(new AuthError('Missing bearer token'));
   }
+
+  res.json({ success: true });
+});
+
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+const connectDB = async () => {
+  await mongoose.connect(MONGO_URI);
+  logger.info('MongoDB connected');
 };
 
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   await connectDB();
-  console.log(`🚀 API running on http://localhost:${PORT}`);
+  logger.info(`API running on http://localhost:${PORT}`);
 
   // LOG THE STELLAR CONFIG TO PROVE IT WORKS
-  console.log(`🌌 Stellar Mode: ${STELLAR_CONFIG.network}`);
+  logger.info(`Stellar mode: ${STELLAR_CONFIG.network}`);
+});
+
+process.on('unhandledRejection', (reason: unknown) => {
+  logger.fatal({ err: reason }, 'Unhandled promise rejection');
+  server.close(() => process.exit(1));
+});
+
+process.on('uncaughtException', (error: Error) => {
+  logger.fatal({ err: error }, 'Uncaught exception');
+  server.close(() => process.exit(1));
 });
