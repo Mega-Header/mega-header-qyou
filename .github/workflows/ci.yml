@@ -80,6 +80,9 @@ jobs:
       - name: Unit tests
         run: npm run test --workspace=apps/api --if-present
 
+      - name: Build Stellar client dependency
+        run: npm run build --workspace=stellar/client --if-present
+
       - name: Type check
         run: npx tsc --noEmit -p apps/api/tsconfig.json
 
