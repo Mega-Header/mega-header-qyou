@@ -8,6 +8,7 @@ import { AuthError } from './errors/AppError';
 import { logger } from './logger';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFound';
+import { ensureLocationIndexes } from './models/Location';
 
 const app = express();
 const PORT = process.env.API_PORT || 4000;
@@ -34,7 +35,9 @@ app.use(errorHandler);
 
 const connectDB = async () => {
   await mongoose.connect(MONGO_URI);
+  await ensureLocationIndexes();
   logger.info('MongoDB connected');
+  logger.info('Location 2dsphere index ensured');
 };
 
 const server = app.listen(PORT, async () => {
