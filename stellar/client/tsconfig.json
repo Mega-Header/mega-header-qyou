@@ -3,7 +3,8 @@
     "compilerOptions": {
         "module": "CommonJS",
         "moduleResolution": "Node",
-        "outDir": "dist"
+        "outDir": "dist",
+        "declaration": true
     },
     "include": [
         "**/*.ts"
