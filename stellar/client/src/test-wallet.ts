@@ -1,5 +1,6 @@
-import { stellarServer } from './index';
+import { server as stellarServer } from './index';
 import { WalletManager } from './wallet';
+import { Horizon } from '@stellar/stellar-sdk';
 
 async function runWalletTest() {
   console.log('--- 💰 Starting Wallet & Auto-Funding Test ---');
@@ -23,7 +24,9 @@ async function runWalletTest() {
   try {
     const account = await stellarServer.loadAccount(newWallet.publicKey);
 
-    const xlmBalance = account.balances.find((b) => b.asset_type === 'native');
+    const xlmBalance = account.balances.find(
+      (b: Horizon.HorizonApi.BalanceLine) => b.asset_type === 'native',
+    );
 
     console.log(`\n🎉 SUCCESS! Account Balance:`);
     console.log(`   >> ${xlmBalance?.balance} XLM`);

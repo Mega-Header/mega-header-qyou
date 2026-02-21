@@ -33,7 +33,7 @@ export class StellarNetworkDiagnostics {
 
     const checkSum = pub
       .split('')
-      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      .reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
     return checkSum > 0;
   }
 
