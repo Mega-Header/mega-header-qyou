@@ -3,16 +3,18 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch index.ts",
-    "build": "tsc"
+    "dev": "node ../../libs/config/validate-env.cjs api && tsx watch index.ts",
+    "build": "node ../../libs/config/validate-env.cjs api && tsc"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.0.10",
     "nodemon": "^3.1.11",
     "tsx": "^4.21.0",
@@ -21,9 +23,11 @@
   "dependencies": {
     "@mega-header-qyou/stellar": "1.0.0",
     "@stellar/stellar-sdk": "^12.3.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.1.5",
     "pino": "^9.7.0"
   }
