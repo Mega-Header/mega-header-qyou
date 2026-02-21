@@ -1,275 +1,208 @@
-name: CI/CD Pipeline
+name: Monorepo CI
 
 on:
-  push:
-    branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
-  NODE_VERSION: '18'
-  NPM_VERSION: '10.1.0'
+  NODE_VERSION: '20'
+  API_PORT: '4000'
+  MONGO_URI: 'mongodb://localhost:27017/mega-header-qyou'
+  JWT_ACCESS_SECRET: '12345678901234567890123456789012'
+  JWT_REFRESH_SECRET: 'abcdefghijklmnopqrstuvwxyz123456'
+  STELLAR_NETWORK: 'TESTNET'
+  STELLAR_SECRET_KEY: 'SAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+  NEXT_PUBLIC_API_URL: 'https://api.example.com'
+  ADMIN_JWT_SECRET: 'abcdefghijklmnopqrstuvwxyz123456'
+  EXPO_PUBLIC_API_URL: 'https://api.example.com'
 
 jobs:
-  # Dependency installation and caching
-  install:
-    name: Install Dependencies
+  changes:
+    name: Detect Changed Workspaces
     runs-on: ubuntu-latest
     outputs:
-      cache-hit: ${{ steps.cache-deps.outputs.cache-hit }}
+      shared: ${{ steps.filter.outputs.shared }}
+      api: ${{ steps.filter.outputs.api }}
+      admin_web: ${{ steps.filter.outputs.admin_web }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+      stellar: ${{ steps.filter.outputs.stellar }}
     steps:
-      - name: Checkout code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            shared:
+              - 'package.json'
+              - 'package-lock.json'
+              - 'tsconfig.json'
+              - 'libs/**'
+              - '.github/workflows/**'
+            api:
+              - 'apps/api/**'
+            admin_web:
+              - 'apps/admin-web/**'
+            mobile:
+              - 'apps/mobile/**'
+            stellar:
+              - 'stellar/**'
+
+  api:
+    name: API Checks
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.api == 'true'
+    steps:
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Cache node_modules
-        id: cache-deps
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            apps/*/node_modules
-            packages/*/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --workspaces --include-workspace-root --no-audit --no-fund
 
-      - name: Verify installation
-        run: |
-          echo "Root dependencies installed"
-          npm list --depth=0
+      - name: Lint
+        run: npm run lint --workspace=apps/api --if-present
 
-  # Linting job
-  lint:
-    name: Lint Code
+      - name: Unit tests
+        run: npm run test --workspace=apps/api --if-present
+
+      - name: Build Stellar client dependency
+        run: npm run build --workspace=stellar/client --if-present
+
+      - name: Type check
+        run: npx tsc --noEmit -p apps/api/tsconfig.json
+
+      - name: Build
+        run: npm run build --workspace=apps/api --if-present
+
+  admin_web:
+    name: Admin Web Checks
     runs-on: ubuntu-latest
-    needs: install
-    strategy:
-      matrix:
-        workspace: 
-          - name: "web-admin"
-            path: "apps/web-admin"
-          - name: "api"
-            path: "apps/api"
-          - name: "mobile"
-            path: "apps/mobile"
-          - name: "eslint-config"
-            path: "packages/eslint-config"
-          - name: "types"
-            path: "packages/types"
-          - name: "typescript-config"
-            path: "packages/typescript-config"
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.admin_web == 'true'
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Restore node_modules cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            apps/*/node_modules
-            packages/*/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --workspaces --include-workspace-root --no-audit --no-fund
 
-      - name: Run ESLint on ${{ matrix.workspace.name }}
-        run: |
-          cd ${{ matrix.workspace.path }}
-          if [ -f "package.json" ]; then
-            if npm run lint --if-present; then
-              echo "✅ Linting passed for ${{ matrix.workspace.name }}"
-            else
-              echo "❌ Linting failed for ${{ matrix.workspace.name }}"
-              exit 1
-            fi
-          else
-            echo "⚠️  No package.json found for ${{ matrix.workspace.name }}, skipping linting"
-          fi
-        continue-on-error: false
+      - name: Lint
+        run: npm run lint --workspace=apps/admin-web --if-present
 
-  # Type checking job
-  typecheck:
-    name: Type Check
+      - name: Unit tests
+        run: npm run test --workspace=apps/admin-web --if-present
+
+      - name: Type check
+        run: npx tsc --noEmit -p apps/admin-web/tsconfig.json
+
+      - name: Build
+        run: npm run build --workspace=apps/admin-web --if-present
+
+  mobile:
+    name: Mobile Checks
     runs-on: ubuntu-latest
-    needs: install
-    strategy:
-      matrix:
-        workspace: 
-          - name: "web-admin"
-            path: "apps/web-admin"
-          - name: "api"
-            path: "apps/api"
-          - name: "mobile"
-            path: "apps/mobile"
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.mobile == 'true'
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Restore node_modules cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            apps/*/node_modules
-            packages/*/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --workspaces --include-workspace-root --no-audit --no-fund
 
-      - name: Run TypeScript type check on ${{ matrix.workspace.name }}
-        run: |
-          cd ${{ matrix.workspace.path }}
-          if [ -f "tsconfig.json" ]; then
-            npx tsc --noEmit
-            echo "✅ Type checking passed for ${{ matrix.workspace.name }}"
-          else
-            echo "⚠️  No tsconfig.json found for ${{ matrix.workspace.name }}, skipping type check"
-          fi
-        continue-on-error: false
+      - name: Lint
+        run: npm run lint --workspace=apps/mobile --if-present
 
-  # Testing job
-  test:
-    name: Run Tests
+      - name: Unit tests
+        run: npm run test --workspace=apps/mobile --if-present
+
+      - name: Type check
+        run: npx tsc --noEmit -p apps/mobile/tsconfig.json
+
+      - name: Build
+        run: npm run build --workspace=apps/mobile --if-present
+
+  stellar:
+    name: Stellar Client Checks
     runs-on: ubuntu-latest
-    needs: install
-    strategy:
-      matrix:
-        workspace: 
-          - name: "web-admin"
-            path: "apps/web-admin"
-          - name: "api"
-            path: "apps/api"
-          - name: "mobile"
-            path: "apps/mobile"
-          - name: "types"
-            path: "packages/types"
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.stellar == 'true'
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Restore node_modules cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            apps/*/node_modules
-            packages/*/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --workspaces --include-workspace-root --no-audit --no-fund
 
-      - name: Run tests on ${{ matrix.workspace.name }}
-        run: |
-          cd ${{ matrix.workspace.path }}
-          if [ -f "package.json" ] && npm run test --if-present; then
-            echo "✅ Tests passed for ${{ matrix.workspace.name }}"
-          else
-            echo "⚠️  No tests configured for ${{ matrix.workspace.name }}, skipping"
-          fi
-        continue-on-error: false
+      - name: Unit tests
+        run: npm run test --workspace=stellar/client --if-present
 
-  # Build verification job
-  build:
-    name: Build Verification
+      - name: Type check
+        run: npx tsc --noEmit -p stellar/client/tsconfig.json
+
+      - name: Build
+        run: npm run build --workspace=stellar/client --if-present
+
+  ci-status:
+    name: CI Status
     runs-on: ubuntu-latest
-    needs: install
-    strategy:
-      matrix:
-        workspace: 
-          - name: "web-admin"
-            path: "apps/web-admin"
-          - name: "api"
-            path: "apps/api"
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Restore node_modules cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            apps/*/node_modules
-            packages/*/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build ${{ matrix.workspace.name }}
-        run: |
-          cd ${{ matrix.workspace.path }}
-          if [ -f "package.json" ]; then
-            if npm run build --if-present; then
-              echo "✅ Build successful for ${{ matrix.workspace.name }}"
-            else
-              echo "⚠️  No build script found for ${{ matrix.workspace.name }}, skipping"
-            fi
-          else
-            echo "⚠️  No package.json found for ${{ matrix.workspace.name }}, skipping build"
-          fi
-        continue-on-error: false
-
-  # Summary job that depends on all others
-  ci-success:
-    name: CI Success
-    runs-on: ubuntu-latest
-    needs: [install, lint, typecheck, test, build]
+    needs: [changes, api, admin_web, mobile, stellar]
     if: always()
     steps:
-      - name: Check all jobs status
+      - name: Ensure affected checks passed
         run: |
-          echo "Install job status: ${{ needs.install.result }}"
-          echo "Lint job status: ${{ needs.lint.result }}"
-          echo "Typecheck job status: ${{ needs.typecheck.result }}"
-          echo "Test job status: ${{ needs.test.result }}"
-          echo "Build job status: ${{ needs.build.result }}"
-          
-          if [[ "${{ needs.install.result }}" == "success" && 
-                "${{ needs.lint.result }}" == "success" && 
-                "${{ needs.typecheck.result }}" == "success" && 
-                "${{ needs.test.result }}" == "success" && 
-                "${{ needs.build.result }}" == "success" ]]; then
-            echo "✅ All CI checks passed!"
-            exit 0
-          else
-            echo "❌ Some CI checks failed!"
+          echo "API job: ${{ needs.api.result }}"
+          echo "Admin Web job: ${{ needs.admin_web.result }}"
+          echo "Mobile job: ${{ needs.mobile.result }}"
+          echo "Stellar job: ${{ needs.stellar.result }}"
+
+          if [[ "${{ needs.api.result }}" == "failure" || "${{ needs.api.result }}" == "cancelled" ]]; then
             exit 1
           fi
+
+          if [[ "${{ needs.admin_web.result }}" == "failure" || "${{ needs.admin_web.result }}" == "cancelled" ]]; then
+            exit 1
+          fi
+
+          if [[ "${{ needs.mobile.result }}" == "failure" || "${{ needs.mobile.result }}" == "cancelled" ]]; then
+            exit 1
+          fi
+
+          if [[ "${{ needs.stellar.result }}" == "failure" || "${{ needs.stellar.result }}" == "cancelled" ]]; then
+            exit 1
+          fi
+
+          echo "All required affected-workspace checks passed."
