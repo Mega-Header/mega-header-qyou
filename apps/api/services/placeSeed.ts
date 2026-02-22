@@ -1,4 +1,4 @@
-import { Location, LocationType } from '../models/Location';
+import { Location, LocationDocument, LocationType } from '../models/Location';
 import { ValidationError } from '../errors/AppError';
 import { logger } from '../logger';
 
@@ -296,29 +296,33 @@ export const seedLocationsFromProvider = async (body: Record<string, unknown>) =
     };
   }
 
-  const operations = places.map((place) => ({
-    updateOne: {
-      filter: {
-        externalSource: place.source,
-        externalPlaceId: place.placeId,
+  const operations = places.map((place) => {
+    const setData: Partial<LocationDocument> = {
+      name: place.name,
+      type: place.type,
+      address: place.address,
+      status: 'active',
+      externalSource: place.source,
+      externalPlaceId: place.placeId,
+      location: {
+        type: 'Point',
+        coordinates: [place.lng, place.lat],
       },
-      update: {
-        $set: {
-          name: place.name,
-          type: place.type,
-          address: place.address,
-          status: 'active',
+    };
+
+    return {
+      updateOne: {
+        filter: {
           externalSource: place.source,
           externalPlaceId: place.placeId,
-          location: {
-            type: 'Point',
-            coordinates: [place.lng, place.lat],
-          },
         },
+        update: {
+          $set: setData,
+        },
+        upsert: true,
       },
-      upsert: true,
-    },
-  }));
+    };
+  });
 
   const result = await Location.bulkWrite(operations, { ordered: false });
   const inserted = result.upsertedCount || 0;
