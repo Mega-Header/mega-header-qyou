@@ -132,6 +132,26 @@ npm run test-net
 
 ```
 
+### 5. Seed Demo Data
+
+For a demo-ready local database, seed sample users and locations from the API workspace:
+
+```bash
+npm run seed:demo --workspace=apps/api
+```
+
+This command:
+
+- upserts demo admin and user accounts
+- upserts a small set of representative locations
+- writes `apps/api/scripts/output/demo-queue-activity.json` with synthetic queue activity fixtures for future queue-report ingestion
+
+Default demo accounts:
+
+- `admin@mega-header-qyou.local` / `mega-header-mega-header-qyouAdmin123!`
+- `demo-user-1@mega-header-qyou.local` / `mega-header-mega-header-qyouUser123!`
+- `demo-user-2@mega-header-qyou.local` / `mega-header-mega-header-qyouUser123!`
+
 ---
 
 ## API Highlights
