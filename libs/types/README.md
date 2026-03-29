@@ -1,4 +1,10 @@
 # @mega-header-qyou/types
 
-Shared frontend contract types for mega-header-mega-header-qyou web and mobile clients.
+Shared TypeScript types for mega-header-mega-header-qyou API contracts.
+
+## Build
+
+```bash
+npm run build --workspace=libs/types
+```
 
