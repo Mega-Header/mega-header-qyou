@@ -1,20 +1,9 @@
-import type { ApiResponse, AdminLocationRow } from "@mega-header-qyou/types";
-
-export type AdminLocationsListResponse = ApiResponse<{
-  rows: AdminLocationRow[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
-  sort: {
-    field: string;
-    direction: "asc" | "desc";
-  };
-  filters: {
-    search: string | null;
-    type: string | null;
-  };
-}>;
-
+export type {
+  AdminLocationsListResponse,
+  AdminLocationDetailResponse,
+  AdminLocationCreateResponse,
+  AdminLocationUpdateResponse,
+  AdminLocationRow,
+  AdminLocationDetail,
+  AdminLocationsListPayload,
+} from "@mega-header-qyou/types";
