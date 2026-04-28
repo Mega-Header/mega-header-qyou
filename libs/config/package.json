@@ -1,0 +1,7 @@
+{
+  "name": "@mega-header-qyou/config",
+  "version": "1.0.0",
+  "private": true,
+  "main": "validate-env.cjs",
+  "type": "commonjs"
+}
