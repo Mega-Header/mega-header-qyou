@@ -1,23 +1,23 @@
 {
-  "name": "mega-header-qyou-monorepo",
-  "version": "1.0.0",
+  "name": "mega-header-qyou-hackathon-starter",
+  "version": "0.1.0",
   "private": true,
   "workspaces": [
     "apps/*",
-    "libs/*",
-    "stellar/*"
+    "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:admin\" \"npm run dev:mobile\"",
-    "dev:api": "npm run dev --workspace=apps/api",
-    "dev:admin": "npm run dev --workspace=apps/admin-web",
-    "dev:mobile": "npm run start --workspace=apps/mobile",
+    "build": "npm run build --workspace @mega-header-qyou/types && npm run build --workspace @mega-header-qyou/config && npm run build --workspace @mega-header-qyou/api && npm run build --workspace @mega-header-qyou/stellar-service && npm run build --workspace @mega-header-qyou/web",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:mobile\" \"npm run dev:stellar-service\"",
+    "dev:api": "npm run dev --workspace @mega-header-qyou/api",
+    "dev:web": "npm run dev --workspace @mega-header-qyou/web",
+    "dev:mobile": "npm run dev --workspace @mega-header-qyou/mobile",
+    "dev:stellar-service": "npm run dev --workspace @mega-header-qyou/stellar-service",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "typecheck": "node scripts/typecheck-workspaces.cjs",
-    "validate": "npm run lint && npm run test && npm run typecheck"
+    "typecheck": "npm run typecheck --workspace @mega-header-qyou/types && npm run typecheck --workspace @mega-header-qyou/config && npm run typecheck --workspace @mega-header-qyou/api && npm run typecheck --workspace @mega-header-qyou/stellar-service && npm run typecheck --workspace @mega-header-qyou/web && npm run typecheck --workspace @mega-header-qyou/mobile"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^9.0.1",
+    "typescript": "^5.9.3"
   }
 }
