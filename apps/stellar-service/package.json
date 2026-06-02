@@ -25,6 +25,7 @@
     }
   },
   "dependencies": {
+    "@mega-header-qyou/config": "*",
     "@mega-header-qyou/types": "*",
     "@stellar/stellar-sdk": "^14.3.3",
     "express": "^5.1.0"
