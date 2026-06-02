@@ -67,7 +67,7 @@ async function main() {
 
     for (const marker of CONTRACT_MARKERS) {
       if (text.includes(marker)) {
-        errors.push(`${rel}: duplicates contract marker (${marker}) — import from @mega-header-qyou/types instead.`);
+        errors.push(`${rel}: duplicates contract marker (${marker}) — use @mega-header-qyou/types instead.`);
       }
     }
   }
