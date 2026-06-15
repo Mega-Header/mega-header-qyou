@@ -2,26 +2,32 @@
   "name": "mega-header-qyou-hackathon-starter",
   "version": "0.1.0",
   "private": true,
+  "description": "Foundation monorepo for the mega-header-mega-header-qyou hackathon starter — monorepo setup and authentication only.",
+  "license": "MIT",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "auth:baseline": "npm run build --workspace @mega-header-qyou/config && npm run auth:baseline --workspace @mega-header-qyou/config",
-    "auth:observability": "node scripts/auth-observability-audit.mjs",
-    "auth:monitor": "node scripts/auth-observability-monitor.mjs",
-    "auth:exercise": "npm run build --workspace @mega-header-qyou/types && npm run build --workspace @mega-header-qyou/config && node scripts/auth-observability-exercise.mjs",
-    "build": "npm run build --workspace @mega-header-qyou/types && npm run build --workspace @mega-header-qyou/config && npm run build --workspace @mega-header-qyou/api && npm run build --workspace @mega-header-qyou/stellar-service && npm run build --workspace @mega-header-qyou/web",
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:mobile\" \"npm run dev:stellar-service\"",
-    "dev:api": "npm run dev --workspace @mega-header-qyou/api",
-    "dev:web": "npm run dev --workspace @mega-header-qyou/web",
-    "dev:mobile": "npm run dev --workspace @mega-header-qyou/mobile",
-    "dev:stellar-service": "npm run dev --workspace @mega-header-qyou/stellar-service",
+    "postinstall": "npm run build -w @mega-header-qyou/shared -w @mega-header-qyou/stellar",
+    "build": "npm run build -w @mega-header-qyou/shared -w @mega-header-qyou/stellar && npm run build --workspaces --if-present",
+    "dev": "concurrently -n api,web,mobile \"npm run dev -w @mega-header-qyou/api\" \"npm run dev -w @mega-header-qyou/web\" \"npm run dev -w @mega-header-qyou/mobile\"",
     "lint": "npm run lint --workspaces --if-present",
-    "typecheck": "npm run build --workspace @mega-header-qyou/types && npm run typecheck --workspace @mega-header-qyou/config && npm run typecheck --workspace @mega-header-qyou/api && npm run typecheck --workspace @mega-header-qyou/stellar-service && npm run typecheck --workspace @mega-header-qyou/web && npm run typecheck --workspace @mega-header-qyou/mobile"
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
+    "@eslint/js": "^9.17.0",
     "concurrently": "^9.0.1",
-    "typescript": "^5.9.3"
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "globals": "^15.14.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.18.0"
   }
 }

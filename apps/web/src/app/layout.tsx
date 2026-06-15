@@ -1,19 +1,19 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
+import { AuthProvider } from '../lib/auth-context';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "mega-header-mega-header-qyou Starter",
-  description: "Open source hackathon starter for the mega-header-mega-header-qyou rebuild."
+  title: 'mega-header-mega-header-qyou — Hackathon Starter',
+  description: 'Authentication foundation for the mega-header-mega-header-qyou hackathon starter.',
 };
 
-export default function RootLayout({
-  children
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
