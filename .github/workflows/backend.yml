@@ -31,6 +31,9 @@ jobs:
       - name: Test
         run: npm run test -w @mega-header-qyou/api
 
+      - name: Test Coverage
+        run: npm run test:coverage -w @mega-header-qyou/api
+
       - name: Build
         run: npm run build -w @mega-header-qyou/api
         # Hardened: explicit timeout, explicit shell, error annotation below
