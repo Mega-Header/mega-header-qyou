@@ -15,7 +15,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
-    "test": "echo \"@mega-header-qyou/stellar has no runtime tests\""
+    "test": "node --import tsx --test tests/**/*.test.ts"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
