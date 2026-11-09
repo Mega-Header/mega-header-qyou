@@ -201,3 +201,12 @@ environment variable (default `12`, enforced minimum `12`). See `apps/api/.env.e
 ## License
 
 MIT
+
+## Resolved Issues
+
+The following issues have been addressed in this release:
+
+- Added issue templates for bug reports and feature requests
+- Added contributing guidelines and CODEOWNERS
+- Improved repository documentation and onboarding
+
